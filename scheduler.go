@@ -6,6 +6,6 @@ import (
 
 //Scheduler struct keep task informations
 type Scheduler struct {
-	taskList map[string]*Task
+	taskList map[string]*task
 	rwMutex  sync.RWMutex
 }

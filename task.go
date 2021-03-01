@@ -12,8 +12,7 @@ const (
 	Stopped
 )
 
-//Task struct keep a information about task
-type Task struct {
+type task struct {
 	taskFunction interface{}
 	taskParams   []interface{}
 	interval     time.Duration
@@ -24,7 +23,7 @@ type Task struct {
 }
 
 //NewTask creates a new task to register with scheduler
-func NewTask(interval time.Duration, immediately bool, taskName string, taskFunc interface{}, taskFuncParams ...interface{}) (*Task, error) {
+func NewTask(interval time.Duration, immediately bool, taskName string, taskFunc interface{}, taskFuncParams ...interface{}) (*task, error) {
 	typ := reflect.TypeOf(taskFunc)
 	if typ.Kind() != reflect.Func {
 		return nil, NoFunction
@@ -35,7 +34,7 @@ func NewTask(interval time.Duration, immediately bool, taskName string, taskFunc
 		return nil, NotMatchedNumParams
 	}
 
-	return &Task{
+	return &task{
 		taskFunction: taskFunc,
 		taskParams:   taskFuncParams,
 		interval:     interval,
@@ -46,7 +45,7 @@ func NewTask(interval time.Duration, immediately bool, taskName string, taskFunc
 }
 
 //Run runs task periodically
-func (t *Task) Run() {
+func (t *task) Run() {
 	f := reflect.ValueOf(t.taskFunction)
 	in := make([]reflect.Value, len(t.taskParams))
 
@@ -70,7 +69,7 @@ func (t *Task) Run() {
 }
 
 //Stop stops doing task
-func (t *Task) Stop() {
+func (t *task) Stop() {
 	t.ticker.Stop()
 	t.status = Stopped
 }
