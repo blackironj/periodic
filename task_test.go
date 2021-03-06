@@ -1,15 +1,14 @@
 package periodic
 
 import (
-	"sync/atomic"
+	"reflect"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewTask(t *testing.T) {
-	cases := []struct {
+	testCases := []struct {
 		expected       error
 		taskFunc       interface{}
 		taskFuncParams []interface{}
@@ -34,60 +33,54 @@ func TestNewTask(t *testing.T) {
 			taskFunc:       func() {},
 			taskFuncParams: []interface{}{1},
 		},
-		// {
-		// 	expected:       nil,
-		// 	taskFunc:       func(val1 string, val2 int64) {},
-		// 	taskFuncParams: []interface{}{"str", 123},
-		// },
 	}
-	for _, tc := range cases {
+
+	for _, tc := range testCases {
 		tc := tc
-		_, err := NewTask(time.Second, true, "NewTask", tc.taskFunc, tc.taskFuncParams...)
+		_, err := NewTask(tc.taskFunc, tc.taskFuncParams...)
 		assert.Equal(t, tc.expected, err)
 	}
+
 }
 
 func TestRunTask(t *testing.T) {
-	cases := []struct {
-		interval    time.Duration
-		sleep       time.Duration
-		expected    int32
-		immediately bool
+	testCases := []struct {
+		expected       interface{}
+		taskFunc       interface{}
+		taskFuncParams []interface{}
 	}{
 		{
-			interval:    time.Millisecond * 500,
-			sleep:       time.Millisecond * 750,
-			expected:    2,
-			immediately: true,
+			expected:       123,
+			taskFunc:       func() int { return 123 },
+			taskFuncParams: []interface{}{},
 		},
 		{
-			interval:    time.Millisecond * 500,
-			sleep:       time.Millisecond * 750,
-			expected:    1,
-			immediately: false,
+			expected:       20,
+			taskFunc:       func(val1 int, val2 int) int { return val1 * val2 },
+			taskFuncParams: []interface{}{10, 2},
 		},
 		{
-			interval:    time.Millisecond * 100,
-			sleep:       time.Millisecond * 1050,
-			expected:    10,
-			immediately: false,
+			expected:       "string",
+			taskFunc:       func(val string) string { return val },
+			taskFuncParams: []interface{}{"string"},
+		},
+		{
+			expected:       []float64{1.0, 2.0},
+			taskFunc:       func() []float64 { return []float64{1.0, 2.0} },
+			taskFuncParams: []interface{}{},
 		},
 	}
 
-	for _, tc := range cases {
+	for _, tc := range testCases {
 		tc := tc
-		var counter int32
-		f := func() {
-			atomic.AddInt32(&counter, 1)
-		}
 
-		task, err := NewTask(tc.interval, tc.immediately, "run-task", f)
-		assert.NoError(t, err)
+		job, _ := NewTask(tc.taskFunc, tc.taskFuncParams...)
+		f := job.GetTaskFunc()
+		p := job.GetTaskFuncParams()
 
-		task.Run()
-		time.Sleep(tc.sleep)
-		task.Stop()
+		actual := f.Call(p)
 
-		assert.Equal(t, tc.expected, counter)
+		assert.Equal(t, reflect.ValueOf(tc.expected).Type(), actual[0].Type())
+		assert.Equal(t, reflect.ValueOf(tc.expected).Interface(), actual[0].Interface())
 	}
 }
