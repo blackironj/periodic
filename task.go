@@ -13,12 +13,12 @@ type task struct {
 func NewTask(taskFunc interface{}, taskFuncParams ...interface{}) (*task, error) {
 	typ := reflect.TypeOf(taskFunc)
 	if typ.Kind() != reflect.Func {
-		return nil, NoFunction
+		return nil, ErrNoFunction
 	}
 
 	f := reflect.ValueOf(taskFunc)
 	if len(taskFuncParams) != f.Type().NumIn() {
-		return nil, NotMatchedNumParams
+		return nil, ErrNotMatchedNumParams
 	}
 
 	return &task{

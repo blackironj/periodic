@@ -19,17 +19,17 @@ func TestNewTask(t *testing.T) {
 			taskFuncParams: []interface{}{},
 		},
 		{
-			expected:       NoFunction,
+			expected:       ErrNoFunction,
 			taskFunc:       "test",
 			taskFuncParams: []interface{}{},
 		},
 		{
-			expected:       NotMatchedNumParams,
+			expected:       ErrNotMatchedNumParams,
 			taskFunc:       func(val1 int, val2 string) {},
 			taskFuncParams: []interface{}{1, "str", 1, []string{"1"}},
 		},
 		{
-			expected:       NotMatchedNumParams,
+			expected:       ErrNotMatchedNumParams,
 			taskFunc:       func() {},
 			taskFuncParams: []interface{}{1},
 		},
