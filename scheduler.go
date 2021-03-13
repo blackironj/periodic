@@ -8,7 +8,8 @@ import (
 type TaskStatus int
 
 const (
-	Running TaskStatus = iota
+	Unknown TaskStatus = iota
+	Running
 	Stopped
 )
 
@@ -23,6 +24,17 @@ type scheduledTask struct {
 
 //Scheduler struct keep task informations
 type Scheduler struct {
-	taskList map[string]*scheduledTask
-	rwMutex  sync.RWMutex
+	taskMap map[string]*scheduledTask
+	rwMutex sync.RWMutex
+}
+
+//GetTaskStatus returns status of specific task
+func (s *Scheduler) GetTaskStatus(taskName string) (TaskStatus, error) {
+	s.rwMutex.RLock()
+	defer s.rwMutex.Unlock()
+
+	if task, ok := s.taskMap[taskName]; ok {
+		return task.status, nil
+	}
+	return Unknown, ErrNotRegistered
 }
