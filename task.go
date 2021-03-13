@@ -1,16 +1,14 @@
 package periodic
 
-import (
-	"reflect"
-)
+import "reflect"
 
-type task struct {
+type Task struct {
 	taskFunction interface{}
 	taskParams   []interface{}
 }
 
 //NewTask creates a new task to register with scheduler
-func NewTask(taskFunc interface{}, taskFuncParams ...interface{}) (*task, error) {
+func NewTask(taskFunc interface{}, taskFuncParams ...interface{}) (*Task, error) {
 	typ := reflect.TypeOf(taskFunc)
 	if typ.Kind() != reflect.Func {
 		return nil, ErrNoFunction
@@ -21,7 +19,7 @@ func NewTask(taskFunc interface{}, taskFuncParams ...interface{}) (*task, error)
 		return nil, ErrNotMatchedNumParams
 	}
 
-	return &task{
+	return &Task{
 		taskFunction: taskFunc,
 		taskParams:   taskFuncParams,
 	}, nil
@@ -29,7 +27,7 @@ func NewTask(taskFunc interface{}, taskFuncParams ...interface{}) (*task, error)
 
 //GetTaskFuncParams return task function parameters
 //if no parameters, it returns zero length slice
-func (t *task) GetTaskFuncParams() []reflect.Value {
+func (t *Task) GetTaskFuncParams() []reflect.Value {
 	params := make([]reflect.Value, len(t.taskParams))
 	for i, param := range t.taskParams {
 		params[i] = reflect.ValueOf(param)
@@ -43,6 +41,6 @@ func (t *task) GetTaskFuncParams() []reflect.Value {
 	params := GetTaskFuncParams()
 	f.Call(params)
 */
-func (t *task) GetTaskFunc() reflect.Value {
+func (t *Task) GetTaskFunc() reflect.Value {
 	return reflect.ValueOf(t.taskFunction)
 }
