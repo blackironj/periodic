@@ -22,8 +22,9 @@ type scheduledTask struct {
 
 //Scheduler struct has task informations
 type Scheduler struct {
-	taskMap map[string]*scheduledTask
 	rwMutex sync.RWMutex
+
+	taskMap map[string]*scheduledTask
 }
 
 //RegisterTask register a task that runs periodically
@@ -57,6 +58,14 @@ func (s *Scheduler) GetTaskStatus(taskName string) (TaskStatus, error) {
 		return task.status, nil
 	}
 	return Unknown, ErrNotRegistered
+}
+
+//GetNumOfTasks returns the number of registered tasks in scheduler
+func (s *Scheduler) GetNumOfTasks() int {
+	s.rwMutex.RLock()
+	defer s.rwMutex.RUnlock()
+
+	return len(s.taskMap)
 }
 
 //Run excutes tasks that status is "stopped"
