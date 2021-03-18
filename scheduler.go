@@ -68,8 +68,9 @@ func (s *Scheduler) GetNumOfTasks() int {
 	return len(s.taskMap)
 }
 
-//Run excutes tasks that status is "stopped"
-//if params do not exist, scheduler runs all tasks. on the other hand, runs specific tasks
+//Run excutes tasks that status are "Stopped"
+//If there are no parameters the scheduler runs all tasks.
+//On the other hand, If there are parameters the scehduler runs specific tasks
 func (s *Scheduler) Run(taskNames ...string) {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
@@ -133,4 +134,34 @@ func releaseTimer(timer *time.Timer) {
 	if !timer.Stop() {
 		<-timer.C
 	}
+}
+
+//Stop stops tasks that status are "Running"
+//If there are no parameters the scheduler stops all tasks.
+//On the other hand, If there are parameters the scehduler stops specific tasks
+func (s *Scheduler) Stop(taskNames ...string) {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
+
+	if len(taskNames) == 0 {
+		for _, t := range s.taskMap {
+			stop(t)
+		}
+		return
+	}
+
+	for _, taskName := range taskNames {
+		if t, ok := s.taskMap[taskName]; ok {
+			stop(t)
+		}
+	}
+}
+
+func stop(st *scheduledTask) {
+	if st.status != Running {
+		return
+	}
+	st.stopSig <- struct{}{}
+	st.status = Stopped
+	close(st.stopSig)
 }
