@@ -27,6 +27,12 @@ type Scheduler struct {
 	taskMap map[string]*scheduledTask
 }
 
+func NewScheduler() *Scheduler {
+	return &Scheduler{
+		taskMap: make(map[string]*scheduledTask),
+	}
+}
+
 //RegisterTask register a task that runs periodically
 func (s *Scheduler) RegisterTask(taskName string, interval time.Duration, taskFunc interface{}, params ...interface{}) error {
 	s.rwMutex.Lock()
