@@ -34,7 +34,7 @@ func NewScheduler() *Scheduler {
 }
 
 //RegisterTask register a task that runs periodically
-func (s *Scheduler) RegisterTask(taskName string, interval time.Duration, taskFunc interface{}, params ...interface{}) error {
+func (s *Scheduler) RegisterTask(taskName string, interval time.Duration, task *Task) error {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
 
@@ -42,13 +42,8 @@ func (s *Scheduler) RegisterTask(taskName string, interval time.Duration, taskFu
 		return ErrDuplicated
 	}
 
-	newTask, err := NewTask(taskFunc, params)
-	if err != nil {
-		return err
-	}
-
 	s.taskMap[taskName] = &scheduledTask{
-		task:     newTask,
+		task:     task,
 		interval: interval,
 		status:   Stopped,
 	}
@@ -118,6 +113,7 @@ func schedule(st *scheduledTask) {
 	stopSigChan := make(chan struct{})
 
 	go func(do func(), interval time.Duration) {
+		timer := time.NewTimer(interval)
 		for {
 			start := time.Now()
 
@@ -131,14 +127,13 @@ func schedule(st *scheduledTask) {
 				calculatedInterval = 0
 			}
 
-			timer := time.NewTimer(calculatedInterval)
+			timer.Reset(calculatedInterval)
 			select {
 			case <-timer.C:
 			case <-stopSigChan:
 				releaseTimer(timer)
 				return
 			}
-			releaseTimer(timer)
 		}
 	}(f, st.interval)
 
@@ -177,7 +172,5 @@ func stop(st *scheduledTask) {
 	if st.status != Running {
 		return
 	}
-	st.stopSig <- struct{}{}
-	st.status = Stopped
 	close(st.stopSig)
 }
