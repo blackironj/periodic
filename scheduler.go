@@ -61,11 +61,21 @@ func (s *Scheduler) GetTaskStatus(taskName string) (TaskStatus, error) {
 }
 
 //GetNumOfTasks returns the number of registered tasks in scheduler
-func (s *Scheduler) GetNumOfTasks() int {
+func (s *Scheduler) GetNumOfTasks(status ...TaskStatus) int {
 	s.rwMutex.RLock()
 	defer s.rwMutex.RUnlock()
 
-	return len(s.taskMap)
+	if len(status) == 0 {
+		return len(s.taskMap)
+	}
+
+	count := 0
+	for _, st := range s.taskMap {
+		if st.status == status[0] {
+			count++
+		}
+	}
+	return count
 }
 
 //Run excutes tasks that status are "Stopped"
