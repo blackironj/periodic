@@ -111,28 +111,28 @@ func schedule(st *scheduledTask) {
 	}
 
 	stopSigChan := make(chan struct{})
-
 	go func(do func(), interval time.Duration) {
 		timer := time.NewTimer(interval)
+		calculatedInterval := interval
 		for {
-			start := time.Now()
-
-			do()
-
-			end := time.Now()
-			elapsed := end.Sub(start)
-			calculatedInterval := interval - elapsed
-
-			if calculatedInterval < 0 {
-				calculatedInterval = 0
-			}
-
+			//TODO: In the case of immediate execution, it should also be handled.
 			timer.Reset(calculatedInterval)
 			select {
 			case <-timer.C:
 			case <-stopSigChan:
 				releaseTimer(timer)
 				return
+			}
+			start := time.Now()
+
+			do()
+
+			end := time.Now()
+			elapsed := end.Sub(start)
+			calculatedInterval = interval - elapsed
+
+			if calculatedInterval < 0 {
+				calculatedInterval = 0
 			}
 		}
 	}(f, st.interval)
