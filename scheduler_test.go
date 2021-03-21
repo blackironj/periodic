@@ -66,7 +66,7 @@ func TestScheduler(t *testing.T) {
 	})
 
 	scheduler.Run()
-	time.Sleep(time.Millisecond * 2900)
+	time.Sleep(time.Millisecond * 2700)
 	scheduler.Stop()
 
 	time.Sleep(time.Millisecond * 100)
