@@ -172,5 +172,6 @@ func stop(st *scheduledTask) {
 	if st.status != Running {
 		return
 	}
+	st.status = Stopped
 	close(st.stopSig)
 }
