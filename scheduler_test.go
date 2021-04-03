@@ -1,6 +1,7 @@
 package periodic
 
 import (
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -67,6 +68,65 @@ func TestScheduler_RunAndStop(t *testing.T) {
 	case <-wait(wg):
 		t.Fatal()
 	}
+}
+
+func TestScheduler_GetNumOfTasks(t *testing.T) {
+	NumOfTasks := 100
+
+	scheduler := NewScheduler()
+
+	testTask, err := NewTask(func() { /*Do nothing*/ })
+	assert.NoError(t, err)
+
+	for i := 0; i < NumOfTasks; i++ {
+		err = scheduler.RegisterTask(strconv.Itoa(i), time.Second*1, testTask)
+		assert.NoError(t, err)
+	}
+
+	t.Run("Get num of running tasks after running", func(t *testing.T) {
+		//Run specific tasks
+		for i := 0; i < NumOfTasks; {
+			scheduler.Run(strconv.Itoa(i))
+			i = i + 2
+		}
+		num := scheduler.GetNumOfTasks(Running)
+		assert.Equal(t, NumOfTasks/2, num)
+		num = scheduler.GetNumOfTasks(Stopped)
+		assert.Equal(t, NumOfTasks/2, num)
+
+		time.Sleep(time.Second * 1)
+
+		//Run tasks remained
+		scheduler.Run()
+
+		num = scheduler.GetNumOfTasks(Running)
+		assert.Equal(t, NumOfTasks, num)
+		num = scheduler.GetNumOfTasks(Stopped)
+		assert.Equal(t, 0, num)
+	})
+
+	time.Sleep(time.Millisecond * 500)
+
+	t.Run("Get num of stopped tasks after stopping", func(t *testing.T) {
+		//Stop specific tasks
+		for i := 0; i < NumOfTasks; {
+			scheduler.Stop(strconv.Itoa(i))
+			i = i + 2
+		}
+		num := scheduler.GetNumOfTasks(Stopped)
+		assert.Equal(t, NumOfTasks/2, num)
+		num = scheduler.GetNumOfTasks(Running)
+		assert.Equal(t, NumOfTasks/2, num)
+
+		time.Sleep(time.Second * 1)
+		//Stop tasks remained
+		scheduler.Stop()
+
+		num = scheduler.GetNumOfTasks(Stopped)
+		assert.Equal(t, NumOfTasks, num)
+		num = scheduler.GetNumOfTasks(Running)
+		assert.Equal(t, 0, num)
+	})
 }
 
 func wait(wg *sync.WaitGroup) chan struct{} {
