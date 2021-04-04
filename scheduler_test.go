@@ -70,6 +70,62 @@ func TestScheduler_RunAndStop(t *testing.T) {
 	}
 }
 
+func TestScheduler_GetTaskStatus(t *testing.T) {
+	scheduler := NewScheduler()
+
+	testTask, err := NewTask(func() { /*Do nothing*/ })
+	assert.NoError(t, err)
+
+	testCases := []struct {
+		taskKey        string
+		run            bool
+		register       bool
+		expectedStatus TaskStatus
+		expectedErr    error
+	}{
+		{
+			taskKey:        "running",
+			run:            true,
+			register:       true,
+			expectedStatus: Running,
+			expectedErr:    nil,
+		},
+		{
+			taskKey:        "stopped",
+			run:            false,
+			register:       true,
+			expectedStatus: Stopped,
+			expectedErr:    nil,
+		},
+		{
+			taskKey:        "unregistered",
+			register:       false,
+			expectedStatus: Unknown,
+			expectedErr:    ErrNotRegistered,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		if !tc.register {
+			continue
+		}
+		err = scheduler.RegisterTask(tc.taskKey, time.Second*1, testTask)
+		assert.NoError(t, err)
+		if tc.run {
+			scheduler.Run(tc.taskKey)
+		}
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		status, err := scheduler.GetTaskStatus(tc.taskKey)
+		assert.Equal(t, tc.expectedErr, err)
+		assert.Equal(t, tc.expectedStatus, status)
+	}
+	scheduler.Stop()
+}
+
 func TestScheduler_GetNumOfTasks(t *testing.T) {
 	NumOfTasks := 100
 
