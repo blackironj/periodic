@@ -175,3 +175,20 @@ func stop(st *scheduledTask) {
 	st.status = Stopped
 	close(st.stopSig)
 }
+
+// Reset resets a interval time of scheduled task.
+// if the task is running, it will stop the task and then cahnge a interval
+func (s *Scheduler) Reset(taskName string, interval time.Duration) error {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
+
+	task, ok := s.taskMap[taskName]
+	if !ok {
+		return ErrNotRegistered
+	}
+
+	stop(task)
+	task.interval = interval
+
+	return nil
+}
