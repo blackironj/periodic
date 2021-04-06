@@ -8,18 +8,18 @@ type Task struct {
 }
 
 //NewTask creates a new task to register with scheduler
-func NewTask(taskFunc interface{}, taskFuncParams ...interface{}) (*Task, error) {
+func NewTask(taskFunc interface{}, taskFuncParams ...interface{}) (Task, error) {
 	typ := reflect.TypeOf(taskFunc)
 	if typ.Kind() != reflect.Func {
-		return nil, ErrNoFunction
+		return Task{}, ErrNoFunction
 	}
 
 	f := reflect.ValueOf(taskFunc)
 	if len(taskFuncParams) != f.Type().NumIn() {
-		return nil, ErrNotMatchedNumParams
+		return Task{}, ErrNotMatchedNumParams
 	}
 
-	return &Task{
+	return Task{
 		taskFunction: taskFunc,
 		taskParams:   taskFuncParams,
 	}, nil

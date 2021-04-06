@@ -14,7 +14,7 @@ const (
 )
 
 type scheduledTask struct {
-	task     *Task
+	task     Task
 	interval time.Duration
 	status   TaskStatus
 	stopSig  chan struct{}
@@ -34,7 +34,7 @@ func NewScheduler() *Scheduler {
 }
 
 //RegisterTask register a task that runs periodically
-func (s *Scheduler) RegisterTask(taskName string, interval time.Duration, task *Task) error {
+func (s *Scheduler) RegisterTask(taskName string, interval time.Duration, task Task) error {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
 
